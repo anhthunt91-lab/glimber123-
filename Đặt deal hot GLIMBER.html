@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLIMBER COSMETICS - Deal rẻ hơn Shopee</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background: #f9f9f9; }
+        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #d63384; text-align: center; }
+        .product-list { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .product-item { border: 1px solid #ddd; padding: 15px; border-radius: 5px; text-align: center; }
+        
+        /* CSS cho hình ảnh sản phẩm */
+        .product-img { width: 100%; max-width: 150px; height: auto; margin-bottom: 10px; border-radius: 5px; }
+        
+        .qty-box { margin-bottom: 10px; }
+        .qty-box input { width: 60px !important; display: inline-block; margin: 0 5px !important; text-align: center; }
+        
+        button { background: #d63384; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        button:hover { background: #b82a6f; }
+        
+        /* Nút xóa trong giỏ hàng */
+        .btn-delete { background: #ff4d4d; padding: 2px 8px; margin-left: 10px; font-size: 12px; }
+        .btn-delete:hover { background: #cc0000; }
+
+        .cart, .order-form, .tracking { margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee; }
+        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        .status-box { padding: 10px; background: #e2f3f5; border-left: 5px solid #22d1ee; margin-top: 10px; }
+        #cart-items li { margin-bottom: 8px; list-style: none; border-bottom: 1px dashed #ddd; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🌸GLIMBER COSMETICS 🌸 Mỹ Phẩm Xinh 🌸</h1>
+    <h2>Ở đây có giá rẻ hơn Shopee</h2>
+
+    <h3>Sản Phẩm Nổi Bật</h3>
+    <div class="product-list">
+        <div class="product-item">
+            <img src="https://medias.watsons.co.th/publishing/WTCTH-310253-front-zoom.jpg?version=1733841381" alt="Son 4U2" class="product-img">
+            <h3>Son Môi BETTER DUO HALF 4U2</h3>
+            <p>Giá: 150,000đ</p>
+            <div class="qty-box">
+                Số lượng: <input type="number" id="qty-1" value="1" min="1">
+            </div>
+            <button onclick="addToCart('Son Môi BETTER HALF DUO LIP 4U2', 150000, 'qty-1')">Thêm vào giỏ</button>
+        </div>
+
+        <div class="product-item">
+            <img src="https://product.hstatic.net/200000868185/product/browit_dd8f5b658bda4276b0d4876a1cd3d54e_85f5321a0a8e4d4d91e70c2daa36b4c1.jpg" alt="Mascara" class="product-img">
+            <h3>Mascara My Everyday BROWIT</h3>
+            <p>Giá: 99,000đ</p>
+            <div class="qty-box">
+                Số lượng: <input type="number" id="qty-2" value="1" min="1">
+            </div>
+            <button onclick="addToCart('Mascara My Everyday BROWIT', 99000, 'qty-2')">Thêm vào giỏ</button>
+        </div>
+    </div>
+
+    <div class="cart">
+        <h2>Giỏ Hàng Của Bạn</h2>
+        <ul id="cart-items" style="padding-left: 0;"></ul>
+        <p><strong>Tổng cộng: <span id="total-price">0</span>đ</strong></p>
+    </div>
+
+    <div class="order-form">
+        <h2>Thông Tin Đặt Hàng</h2>
+        <input type="text" id="customerName" placeholder="Họ và tên">
+        <input type="text" id="customerPhone" placeholder="Số điện thoại">
+        <input type="text" id="customerAddress" placeholder="Địa chỉ giao hàng">
+        <button onclick="placeOrder()">Xác Nhận Đặt Hàng</button>
+    </div>
+
+    <div class="tracking">
+        <h2>Theo Dõi Đơn Hàng</h2>
+        <input type="text" id="searchPhone" placeholder="Nhập số điện thoại để kiểm tra">
+        <button onclick="trackOrder()">Tìm đơn hàng</button>
+        <div id="tracking-result"></div>
+    </div>
+</div>
+
+<script>
+    let cart = [];
+    let orders = {}; 
+
+    function addToCart(name, price, inputId) {
+        const quantity = parseInt(document.getElementById(inputId).value);
+        if (quantity <= 0 || isNaN(quantity)) {
+            alert("Vui lòng nhập số lượng hợp lệ!");
+            return;
+        }
+
+        const existingItem = cart.find(item => item.name === name);
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            cart.push({name, price, quantity});
+        }
+        renderCart();
+    }
+
+    // Hàm Xóa sản phẩm khỏi giỏ
+    function removeFromCart(index) {
+        cart.splice(index, 1); // Xóa 1 phần tử tại vị trí index
+        renderCart(); // Vẽ lại giỏ hàng
+    }
+
+    function renderCart() {
+        const cartList = document.getElementById('cart-items');
+        const totalSpan = document.getElementById('total-price');
+        cartList.innerHTML = '';
+        let total = 0;
+
+        cart.forEach((item, index) => {
+            let li = document.createElement('li');
+            let itemTotal = item.price * item.quantity;
+            li.innerHTML = `
+                ${item.name} (x${item.quantity}) - ${itemTotal.toLocaleString()}đ
+                <button class="btn-delete" onclick="removeFromCart(${index})">Xóa</button>
+            `;
+            cartList.appendChild(li);
+            total += itemTotal;
+        });
+        totalSpan.textContent = total.toLocaleString();
+    }
+
+    function placeOrder() {
+        const name = document.getElementById('customerName').value;
+        const phone = document.getElementById('customerPhone').value;
+        const total = document.getElementById('total-price').textContent;
+
+        if (!phone || cart.length === 0) {
+            alert("Vui lòng thêm sản phẩm và nhập số điện thoại!");
+            return;
+        }
+
+        orders[phone] = {
+            status: "Đang chuẩn bị hàng",
+            details: cart.map(i => `${i.name} (x${i.quantity})`).join(", "),
+            total: total
+        };
+
+        alert("Chúc mừng " + name + "! Đơn hàng của bạn đã được tiếp nhận.");
+        cart = []; 
+        renderCart();
+    }
+
+    function trackOrder() {
+        const phone = document.getElementById('searchPhone').value;
+        const resultDiv = document.getElementById('tracking-result');
+        if (orders[phone]) {
+            const order = orders[phone];
+            resultDiv.innerHTML = `
+                <div class="status-box">
+                    <p><strong>Trạng thái:</strong> ${order.status}</p>
+                    <p><strong>Sản phẩm:</strong> ${order.details}</p>
+                    <p><strong>Tổng tiền:</strong> ${order.total}đ</p>
+                </div>`;
+        } else {
+            resultDiv.innerHTML = "<p>Không tìm thấy đơn hàng.</p>";
+        }
+    }
+</script>
+
+</body>
+</html>
